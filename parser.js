@@ -221,7 +221,7 @@ function parse(questions_text) {
                   new Token(
                     TokenType.BLANK,
                     findResult.index,
-                    line.substring(findResult.index + 1, i).replace(/%.*%/, "")
+                    line.substring(findResult.index + 1, i).replace(/%.*%/g, "")
                   )
                 );
                 append = true;

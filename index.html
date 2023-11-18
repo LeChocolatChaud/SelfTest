@@ -3,14 +3,58 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
     <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
     <script type="module" src="script.js"></script>
     <title>Self Test</title>
   </head>
   <body>
-    <div id="main-container">
-      <h1>Self Test Website</h1>
-      <button class="bold" id="upload-button" title="Upload your questions file (.qst) here...">Upload</button>
+    <div class="flex-column aligned">
+      <h1 class="translatable" id="page-title">Self Test Website</h1>
+      <div class="flex-column aligned justified">
+        <div class="flex-row aligned">
+          <input
+            id="url-input"
+            class="translatable"
+            placeholder="File URL here..."
+          />
+          <button
+            class="bold translatable green-bgc"
+            id="get-button"
+            title="Get your questions file (.qst) from the url"
+          >
+            Get
+          </button>
+        </div>
+        <span class="translatable" id="get-or-upload">or</span>
+        <div class="flex-row aligned">
+          <button
+            class="bold translatable green-bgc"
+            id="upload-button"
+            title="Upload your questions file (.qst) here..."
+          >
+            Upload
+          </button>
+          <span class="translatable" id="upload-your-file"
+            >&nbsp;your file</span
+          >
+        </div>
+      </div>
+      <div class="flex-column aligned" id="questions-container">
+        <!-- questions will be here -->
+        <!-- controlled by js -->
+      </div>
+      <button
+        class="bold translatable lavender-bgc"
+        id="submit-button"
+        title="Submit your answers"
+      >
+        Submit
+      </button>
+      <div class="flex-column aligned" id="answers-container">
+        <!-- answers will be here -->
+        <!-- controlled by js -->
+      </div>
     </div>
   </body>
 </html>
