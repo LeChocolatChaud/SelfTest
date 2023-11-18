@@ -1,0 +1,8 @@
+[config]
+name=Test Library
+author=LeChocolatChaud
+format=1
+version=1
+
+[questions]
+{Introduction} Hello, I'm $James%name%$
