@@ -5,4 +5,4 @@ format=1
 version=1
 
 [questions]
-{Introduction} Hello, I'm $James%name%$
+{Introduction} Hello, I'm $James%name$

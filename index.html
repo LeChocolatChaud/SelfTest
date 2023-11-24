@@ -10,12 +10,13 @@
   </head>
   <body>
     <div class="flex-column aligned">
-      <h1 class="translatable" id="page-title">Self Test Website</h1>
-      <div class="flex-column aligned justified">
+      <h1 class="translatable" key="page-title">Self Test Website</h1>
+      <div class="flex-adaptive aligned justified" style="margin-bottom: 1ch">
         <div class="flex-row aligned">
           <input
             id="url-input"
             class="translatable"
+            type="url"
             placeholder="File URL here..."
           />
           <button
@@ -26,7 +27,7 @@
             Get
           </button>
         </div>
-        <span class="translatable" id="get-or-upload">or</span>
+        <div class="asplitter">&ZeroWidthSpace;</div>
         <div class="flex-row aligned">
           <button
             class="bold translatable green-bgc"
@@ -35,9 +36,18 @@
           >
             Upload
           </button>
-          <span class="translatable" id="upload-your-file"
+          <span class="translatable" key="upload-your-file"
             >&nbsp;your file</span
           >
+        </div>
+        <div class="asplitter">&ZeroWidthSpace;</div>
+        <div class="flex-row aligned">
+          <span class="translatable" key="choose-saved-libraries"
+            >Choose from saved libraries:
+          </span>
+          <select id="saved-libraries">
+            <option value="" selected></option>
+          </select>
         </div>
       </div>
       <div class="flex-column aligned" id="questions-container">
