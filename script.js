@@ -3,17 +3,12 @@ import { getLang } from "./lang.js";
 
 const lang = getLang(navigator.language);
 
-function translate(key) {
-  if (!lang[key]) return "";
-  if (!lang[key].text) return "";
-  return lang[key].text;
-}
-
 let storedLibs = localStorage.getItem("libraries");
 
-export const libraries = storedLibs ? JSON.parse(storedLibs) : [];
+const libraries = storedLibs ? JSON.parse(storedLibs) : [];
 
 try {
+  // format the stored json raw data to make symbols work properly
   for (let i = 0; i < libraries.length; i++) {
     let lib = libraries[i];
     let obj = Library.from(lib);
@@ -21,18 +16,27 @@ try {
   }
 } catch (e) {
   console.error(e);
-  localStorage.removeItem("libraries");
+  alert(lang.translate("error-loading-libraries"));
+  localStorage.removeItem("libraries"); // clear stored libraries if failed to format
   libraries.splice(0, libraries.length);
 }
 
 window.onbeforeunload = () => {
-  localStorage.setItem("libraries", JSON.stringify(libraries, function(_key, value) {
-    return typeof value === "symbol" ? value.toString().replace(/^Symbol\((.*)\)$/, 'Symbol("$1")') : value;
-  }));
+  // save the libraries in memory
+  localStorage.setItem(
+    "libraries",
+    JSON.stringify(libraries, function (_key, value) {
+      // symbol can't be stored by JSON, convert it to string format
+      return typeof value === "symbol"
+        ? value.toString().replace(/^Symbol\((.*)\)$/, 'Symbol("$1")')
+        : value;
+    })
+  );
 };
 
 $(function () {
   for (let i in lang) {
+    // translate DOM
     let element = $(`#${i.replace(/_/g, "-")}`);
     if (!element.length) {
       element = $(`[key=${i.replace(/_/g, "-")}]`);
@@ -40,6 +44,7 @@ $(function () {
     if (!element.length) continue;
     for (let j in lang[i]) {
       switch (j) {
+        // text and html has their unique jq methods
         case "innerText":
           element.text(lang[i][j]);
           break;
@@ -53,8 +58,12 @@ $(function () {
   }
 
   $("#submit-button").hide();
+  $("#show-answer-button").hide();
+  $("#hide-answer-button").hide();
+  $("#library-info").hide();
 
   for (let i = 0; i < libraries.length; i++) {
+    // load the libraries into select
     let library = libraries[i];
     let option = document.createElement("option");
     option.innerText = library.name;
@@ -63,12 +72,29 @@ $(function () {
   }
 
   function render(library_name) {
+    // render a library into DOM
     $("#questions-container").empty();
-    if (library_name === "") return;
+    if (library_name === "") {
+      $("#submit-button").hide();
+      $("#show-answer-button").hide();
+      $("#hide-answer-button").hide();
+      $("#library-info").hide();
+      return;
+    }
+    $("#library-info").show();
+    $(".info-detail").remove();
     let library = libraries.find((library) => library.name === library_name);
     if (!library) {
       console.error(`There's no library named "${library_name}".`);
       return;
+    }
+    for (let property in library) {
+      if (property === "questions") continue;
+      if (!library[property]) continue;
+      let infoDiv = $(document.createElement("div"));
+      infoDiv.addClass("info-detail");
+      infoDiv.text(lang.translate("info_" + property) + library[property]);
+      infoDiv.appendTo($("#library-info"));
     }
     let questions = library.questions;
     let questionHints = [];
@@ -77,6 +103,7 @@ $(function () {
       let questionDiv = $(document.createElement("div"));
       questionDiv.addClass("question");
       questionDiv.addClass("flex-row");
+      questionDiv.append($('<span class="bullet">&#8226;&ensp;</span>'));
       let tokens = question.tokens;
       let blankIndex = 0;
       let hints = [];
@@ -91,9 +118,25 @@ $(function () {
           case TokenType.BLANK:
             tokenElement = $(document.createElement("input"));
             tokenElement.attr("type", "text");
-            tokenElement.attr("id", "blank-" + blankIndex);
-            tokenElement.attr("size", question.answers[blankIndex].length + 2);
+            tokenElement.attr("id", `question-${i}-blank-${blankIndex}`);
+            tokenElement.attr(
+              "size",
+              question.answers[blankIndex]
+                .map((e) => e.length)
+                .sort()
+                .reverse()[0] + 2
+            );
             tokenElement.addClass("blank");
+            tokenElement.on("input", function () {
+              if ($(this).hasClass("correct")) {
+                $(this).removeClass("correct");
+              } else if ($(this).hasClass("wrong")) {
+                $(this).removeClass("wrong");
+              }
+              $("#show-answer-button").hide();
+              $("#hide-answer-button").hide();
+              $(".correct-answer").remove();
+            });
             break;
           case TokenType.BLANK_END:
             blankIndex++;
@@ -105,7 +148,15 @@ $(function () {
             let refQuestion = questions.find(
               (question) => question.keyword === token.text
             );
-            if (!refQuestion) return;
+            if (!refQuestion) {
+              console.error("Reference question not found: " + token.text);
+              alert(
+                `${lang.translate("reference_question_not_found")} (${
+                  token.text
+                })`
+              );
+              return;
+            }
             let refSource = refQuestion.tokens.find(
               (t) => t.type === TokenType.REFERNCE_SOURCE
             );
@@ -121,11 +172,13 @@ $(function () {
       questionDiv.appendTo($("#questions-container"));
       questionHints.push(hints);
     }
-    for (let qh of questionHints) {
-      for (let i = 0; i < qh.length; i++) {
-        $("input#blank-" + i).attr("placeholder", qh[i]);
+    for (let i = 0; i < questionHints.length; i++) {
+      const qh = questionHints[i];
+      for (let j = 0; j < qh.length; j++) {
+        $(`input#question-${i}-blank-${j}`).attr("placeholder", qh[j]);
       }
     }
+    $("#submit-button").show();
   }
 
   $("#saved-libraries").on("change", function () {
@@ -133,16 +186,16 @@ $(function () {
   });
 
   function save(library) {
-    let sameName = libraries.find((library) => library.name === library.name);
+    let sameName = libraries.find((lib) => lib.name === library.name);
     if (sameName) {
       let replace = sameName.version <= library.version;
       if (!replace) {
         replace = confirm(
-          translate("confirm_version_1") +
+          lang.translate("confirm_version_1") +
             library.version +
-            translate("confirm_version_2") +
-            libraries[i].version +
-            translate("confirm_version_3")
+            lang.translate("confirm_version_2") +
+            library.version +
+            lang.translate("confirm_version_3")
         );
       }
       if (!replace) return false;
@@ -157,6 +210,8 @@ $(function () {
     option.innerText = library.name;
     option.value = encodeURI(library.name);
     $("#saved-libraries").append(option);
+    $("#saved-libraries option[selected]").removeAttr("selected");
+    $("#saved-libraries option:last").attr("selected", "selected");
     return true;
   }
 
@@ -189,5 +244,71 @@ $(function () {
       };
     };
     temp_input.click();
+  });
+  $("#submit-button").on("click", function () {
+    const libName = decodeURI($("#saved-libraries").val());
+    let library = libraries.find((lib) => lib.name == libName);
+    if (!library) {
+      console.error(`Library with name ${libName} not found.`);
+      alert(`${lang.translate("library-not-found")} (${libName})`);
+      return;
+    }
+    const questions = library.questions;
+    for (let i = 0; i < questions.length; i++) {
+      const answers = questions[i].answers;
+      for (let j = 0; j < answers.length; j++) {
+        const element = $(`input#question-${i}-blank-${j}`);
+        if (answers[j].find((e) => e === element.val())) {
+          element.addClass("correct");
+        } else {
+          element.addClass("wrong");
+        }
+      }
+    }
+    $(".correct-answer").remove();
+    $("#show-answer-button").show();
+    $("#hide-answer-button").hide();
+  });
+  $("#show-answer-button").on("click", function () {
+    const libName = decodeURI($("#saved-libraries").val());
+    let library = libraries.find((lib) => lib.name == libName);
+    if (!library) {
+      console.error(`Library with name ${libName} not found.`);
+      alert(`${lang.translate("library-not-found")} (${libName})`);
+      return;
+    }
+    const questions = library.questions;
+    for (let i = 0; i < questions.length; i++) {
+      const answers = questions[i].answers;
+      for (let j = 0; j < answers.length; j++) {
+        const element = $(`input#question-${i}-blank-${j}`);
+        if (!answers.find((e) => e === element.val())) {
+          const correctAnswerSpan = $(document.createElement("span"));
+          correctAnswerSpan.addClass("correct-answer");
+          correctAnswerSpan.text(answers[j].join("/"));
+          element.after(correctAnswerSpan);
+        }
+      }
+    }
+    $("#show-answer-button").hide();
+    $("#hide-answer-button").show();
+  });
+  $("#hide-answer-button").on("click", function () {
+    $(".correct-answer").remove();
+    $("#show-answer-button").show();
+    $("#hide-answer-button").hide();
+  });
+  $("#open-side-bar-button").on("click", function () {
+    $("#side-bar").addClass("open");
+    $(this).addClass("fade-out");
+    if ($(this).hasClass("fade-in")) $(this).removeClass("fade-in");
+    $(this).attr("disabled", true);
+  });
+  $("#close-side-bar-button").on("click", function () {
+    if ($("#side-bar").hasClass("open")) $("#side-bar").removeClass("open");
+    $("#open-side-bar-button").addClass("fade-in");
+    if ($("#open-side-bar-button").hasClass("fade-out"))
+      $(this).removeClass("fade-out");
+    $("#open-side-bar-button").attr("disabled", false);
   });
 });

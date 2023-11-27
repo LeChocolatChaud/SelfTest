@@ -6,13 +6,16 @@
     <link rel="stylesheet" href="style.css" />
     <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
     <script type="module" src="script.js"></script>
-    <title>Self Test</title>
+    <title id="title">Self Test</title>
   </head>
   <body>
-    <div class="flex-column aligned">
+    <div class="flex flex-column center-aligned">
       <h1 class="translatable" key="page-title">Self Test Website</h1>
-      <div class="flex-adaptive aligned justified" style="margin-bottom: 1ch">
-        <div class="flex-row aligned">
+      <div
+        class="flex flex-adaptive center-aligned center-justified"
+        id="library-select"
+      >
+        <div class="flex flex-row center-aligned">
           <input
             id="url-input"
             class="translatable"
@@ -27,8 +30,8 @@
             Get
           </button>
         </div>
-        <div class="asplitter">&ZeroWidthSpace;</div>
-        <div class="flex-row aligned">
+        <div class="asplitter"></div>
+        <div class="flex flex-row center-aligned">
           <button
             class="bold translatable green-bgc"
             id="upload-button"
@@ -40,8 +43,8 @@
             >&nbsp;your file</span
           >
         </div>
-        <div class="asplitter">&ZeroWidthSpace;</div>
-        <div class="flex-row aligned">
+        <div class="asplitter"></div>
+        <div class="flex flex-row center-aligned">
           <span class="translatable" key="choose-saved-libraries"
             >Choose from saved libraries:
           </span>
@@ -50,21 +53,43 @@
           </select>
         </div>
       </div>
-      <div class="flex-column aligned" id="questions-container">
+      <div class="flex flex-column start-aligned page-wide" id="questions-container">
         <!-- questions will be here -->
         <!-- controlled by js -->
       </div>
-      <button
-        class="bold translatable lavender-bgc"
-        id="submit-button"
-        title="Submit your answers"
-      >
-        Submit
-      </button>
-      <div class="flex-column aligned" id="answers-container">
-        <!-- answers will be here -->
-        <!-- controlled by js -->
+      <div class="flex flex-row center-aligned">
+        <button
+          class="bold translatable lavender-bgc"
+          id="submit-button"
+          title="Submit your answers"
+        >
+          Submit
+        </button>
+        <button
+          class="bold translatable lavender-bgc"
+          id="show-answer-button"
+          title="Show the correct answers"
+        >
+          Show Answers
+        </button>
+        <button
+          class="bold translatable lavender-bgc"
+          id="hide-answer-button"
+          title="Hide the correct answers"
+        >
+          Hide Answers
+        </button>
       </div>
+    </div>
+    <button id="open-side-bar-button" class="gray-bgc translatable flex center-aligned center-justified square" title="Open the sidebar">
+      <object data="menu.svg" type="image/svg+xml"></object>
+    </button>
+    <div id="side-bar" class="flex flex-column">
+      <button id="close-side-bar-button" class="transparent-bgc flex center-aligned center-justified square"><object data="cross.svg" type="image/svg+xml"></object></button>
+      <div id="library-info" class="flex flex-column">
+        <h3 class="translatable" key="library-info-title">Library Info</h3>
+      </div>
+      <div class="flex flex-column"></div>
     </div>
   </body>
 </html>

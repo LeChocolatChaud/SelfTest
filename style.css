@@ -10,11 +10,14 @@ body {
   max-height: 100vh;
   background: linear-gradient(#f8e5d6, #f7ded5);
   background-attachment: fixed;
-  /* background-color: #f8e5d6; */
+  overflow-x: hidden;
+}
+
+.flex {
+  display: flex;
 }
 
 .flex-column {
-  display: flex;
   flex-direction: column;
 }
 
@@ -23,7 +26,6 @@ body {
 }
 
 .flex-row {
-  display: flex;
   flex-direction: row;
 }
 
@@ -32,7 +34,6 @@ body {
 }
 
 .flex-adaptive {
-  display: flex;
   flex-direction: row;
 }
 
@@ -40,11 +41,11 @@ body {
   margin-left: 0.25em;
 }
 
-.aligned {
+.center-aligned {
   align-items: center;
 }
 
-.justified {
+.center-justified {
   justify-content: center;
 }
 
@@ -64,22 +65,33 @@ button {
 }
 
 button:hover {
-  filter: brightness(85%);
+  filter: brightness(90%);
 }
 
 button:active {
-  filter: brightness(75%);
+  filter: brightness(85%);
 }
 
-input {
+input,
+select {
   border: 1px solid lightgray;
   border-radius: 1em;
   padding: 8px;
   font-size: 1rem;
+  transition: 100ms linear;
 }
 
-input:focus {
+input:focus,
+select:focus {
   outline: none;
+}
+
+select:hover {
+  filter: brightness(90%);
+}
+
+select:active {
+  filter: brightness(85%);
 }
 
 input.blank {
@@ -100,11 +112,15 @@ input.blank:focus {
 }
 
 button.green-bgc {
-  background: linear-gradient(30deg, #D5F7D5, #E3F7D5);
+  background: linear-gradient(30deg, #d5f7d5, #e3f7d5);
 }
 
 button.lavender-bgc {
-  background: linear-gradient(30deg, #DBD5F7, #E6D5F7);
+  background: linear-gradient(30deg, #dbd5f7, #e6d5f7);
+}
+
+button.gray-bgc {
+  background: linear-gradient(30deg, #e0e0e0, #f0f0f0);
 }
 
 div.asplitter {
@@ -112,9 +128,14 @@ div.asplitter {
   align-self: stretch;
   border: none;
   border-left: 1px solid rgb(162, 162, 162);
+  margin: 0 0.5em !important;
 }
 
-@media (max-width: 800px) {
+div.asplitter + * {
+  margin-left: 0 !important;
+}
+
+@media (max-width: 767px) {
   .flex-adaptive {
     flex-direction: column;
   }
@@ -127,9 +148,161 @@ div.asplitter {
   div.asplitter {
     border: none;
     border-top: 1px solid rgb(162, 162, 162);
+    margin: 0.75ch 0 !important;
+  }
+
+  div.asplitter + * {
+    margin-left: inherit !important;
+    margin-top: 0 !important;
   }
 }
 
 div.question {
   align-items: start;
 }
+
+div#library-select {
+  margin-bottom: 4ch;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 1em;
+  border-radius: 1em;
+}
+
+.start-aligned {
+  align-items: start;
+}
+
+.page-wide {
+  width: 90%;
+  margin: 0 5%;
+}
+
+div.question {
+  list-style-type: disc;
+}
+
+input.blank.correct {
+  background-color: rgba(145, 255, 145, 0.65);
+  color: darkgreen;
+}
+
+input.blank.wrong {
+  background-color: rgba(247, 213, 213, 0.65);
+  color: darkred;
+}
+
+input.blank.wrong:has(+ .correct-answer) {
+  text-decoration: line-through;
+}
+
+.correct-answer {
+  font-weight: bold;
+  color: darkgreen;
+}
+
+button.square {
+  height: 3rem;
+  width: 3rem;
+}
+
+button#open-side-bar-button {
+  position: absolute;
+  top: 0.75em;
+  right: 0.75em;
+}
+
+button#close-side-bar-button {
+  position: relative;
+  top: 0;
+  left: 0;
+}
+
+button > object[type="image/svg+xml"] {
+  height: 90%;
+  width: 90%;
+}
+
+object {
+  pointer-events: none;
+}
+
+div#side-bar {
+  position: fixed;
+  right: calc(-300px - 2em);
+  top: 0;
+  height: 100%;
+  width: 300px;
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 1em;
+  border-radius: 1em;
+  z-index: 100;
+  animation: side-bar-out 0.25s ease-in-out forwards;
+}
+
+@keyframes side-bar-in {
+  from {
+    right: calc(-300px - 2em);
+  }
+  to {
+    right: 0px;
+  }
+}
+
+@keyframes side-bar-out {
+  from {
+    right: 0px;
+  }
+  to {
+    right: calc(-300px - 2em);
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+div#side-bar.open {
+  animation: side-bar-in 0.25s ease-in-out forwards;
+}
+
+.fade-out:not(.fade-in) {
+  animation: fade-out 0.1s ease-in-out forwards;
+}
+
+.fade-in:not(.fade-out) {
+  animation: fade-in 0.1s ease-in-out forwards;
+}
+
+button.transparent-bgc {
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+div#side-bar > div {
+  width: 100%;
+  height: fit-content;
+  border-radius: 1em;
+  background-color: #FFFFFF;
+  padding: 10px;
+}
+
+div#side-bar > div > div {
+  width: 100%;
+  height: fit-content;
+  padding: 10px;
+}
+

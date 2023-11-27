@@ -1,22 +1,36 @@
 class Library {
-  constructor(name, questions) {
+  constructor(name, questions, properties) {
     this.name = name;
     this.questions = questions;
+    this.author = properties.author;
+    this.description = properties.description;
+    this.version = properties.version;
+    this.subject = properties.subject;
   }
 
   static from(obj) {
     if (typeof obj === "string") obj = JSON.parse(obj);
-    if (typeof obj !== "object") throw TypeError("The parameter must be a library-like object.");
-    if (!obj.name || !obj.questions) throw TypeError("The library must have a name and questions.");
+    if (typeof obj !== "object")
+      throw TypeError("The parameter must be a library-like object.");
+    if (!obj.name || !obj.questions)
+      throw TypeError("The library must have a name and questions.");
     if (obj instanceof Library) return obj;
     let parsed_questions = obj.questions.map((q) => Question.from(q));
-    return new Library(obj.name, parsed_questions);
+    return new Library(obj.name, parsed_questions, {
+      author: obj.author,
+      description: obj.description,
+      version: obj.version,
+      subject: obj.subject,
+    });
   }
 }
 
 class Question {
   constructor(tokens) {
     this.tokens = tokens.sort((a, b) => a.index - b.index);
+    if (!this.tokens.find((t) => t.type === TokenType.REFERNCE_SOURCE)) {
+      this.tokens.unshift(new Token(TokenType.REFERNCE_SOURCE, 0));
+    }
     let keyword;
     this.keyword = (keyword = tokens.find((t) => t.type === TokenType.KEYWORD))
       ? keyword.text
@@ -28,7 +42,8 @@ class Question {
 
   static from(obj) {
     if (typeof obj === "string") obj = JSON.parse(obj);
-    if (typeof obj !== "object") throw TypeError("The parameter must be a question-like object.");
+    if (typeof obj !== "object")
+      throw TypeError("The parameter must be a question-like object.");
     if (!obj.tokens) throw TypeError("The question must have tokens.");
     if (obj instanceof Question) return obj;
     return new Question(obj.tokens.map((t) => Token.from(t)));
@@ -112,7 +127,7 @@ class Token {
           this.text = "@";
           break;
         case TokenType.REFERNCE_SOURCE:
-          this.text = "|";
+          this.text = "*";
           break;
         default:
           this.text = "";
@@ -122,8 +137,10 @@ class Token {
 
   static from(obj) {
     if (typeof obj === "string") obj = JSON.parse(obj);
-    if (typeof obj !== "object") throw TypeError("The parameter must be a token-like object.");
-    if (!obj.type || obj.index === undefined || !obj.text) throw TypeError("The token must have type, index and text.");
+    if (typeof obj !== "object")
+      throw TypeError("The parameter must be a token-like object.");
+    if (!obj.type || obj.index === undefined || !obj.text)
+      throw TypeError("The token must have type, index and text.");
     if (obj instanceof Token) return obj;
     return new Token(TokenType.valueOf(obj.type), obj.index, obj.text);
   }
@@ -216,6 +233,9 @@ function parse(questions_text) {
               );
             }
             break;
+          case "subject":
+            properties.subject = splitted[1];
+            break;
           default:
             throw new ParseError(
               `Unknown config key.\n>>> Error at line ${pointer}, column 1`
@@ -290,7 +310,11 @@ function parse(questions_text) {
 
                 tokens.push(new Token(TokenType.BLANK_END, i));
                 tokens.push(
-                  new Token(TokenType.BLANK, findResultStart.index + 1, blank[0])
+                  new Token(
+                    TokenType.BLANK,
+                    findResultStart.index + 1,
+                    blank[0].split(/\|/g)
+                  )
                 );
                 if (blank.length > 1) {
                   let hintStart = tokens
@@ -386,7 +410,7 @@ function parse(questions_text) {
                 text = "";
               }
               break;
-            case "|":
+            case "*":
               if (tokens.find((t) => t.type == TokenType.REFERNCE_SOURCE))
                 throw new ParseError(
                   `There shouldn't be two reference sources in one question.\n>>> Error at line ${pointer}, column ${
@@ -428,10 +452,7 @@ function parse(questions_text) {
     }
   }
   if (!properties.name) throw new ParseError("A library must have a name.");
-  let library = new Library(properties.name, questions);
-  library.author = properties.author;
-  library.description = properties.description;
-  library.version = properties.version;
+  let library = new Library(properties.name, questions, properties);
   return library;
 }
 
