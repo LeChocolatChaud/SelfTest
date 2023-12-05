@@ -1,10 +1,19 @@
+/**
+ * A library containing a set of questions.
+ */
 class Library {
-  constructor(name, questions, properties) {
+  /**
+   * @param {string} name The library name.
+   * @param {number} version The library version.
+   * @param {Array<Question>} questions The question the library contains.
+   * @param {{author: string | undefined, description: string | undefined, subject: string | undefined}} properties The optional properties of the library.
+   */
+  constructor(name, version, questions, properties) {
     this.name = name;
+    this.version = version;
     this.questions = questions;
     this.author = properties.author;
     this.description = properties.description;
-    this.version = properties.version;
     this.subject = properties.subject;
   }
 
@@ -16,25 +25,28 @@ class Library {
       throw TypeError("The library must have a name and questions.");
     if (obj instanceof Library) return obj;
     let parsed_questions = obj.questions.map((q) => Question.from(q));
-    return new Library(obj.name, parsed_questions, {
+    return new Library(obj.name, obj.version, parsed_questions, {
       author: obj.author,
       description: obj.description,
-      version: obj.version,
       subject: obj.subject,
     });
   }
 }
 
 class Question {
-  constructor(tokens) {
+  constructor(tokens, keyword) {
     this.tokens = tokens.sort((a, b) => a.index - b.index);
     if (!this.tokens.find((t) => t.type === TokenType.REFERNCE_SOURCE)) {
       this.tokens.unshift(new Token(TokenType.REFERNCE_SOURCE, 0));
     }
-    let keyword;
-    this.keyword = (keyword = tokens.find((t) => t.type === TokenType.KEYWORD))
-      ? keyword.text
-      : undefined;
+    let findKeyword;
+    if (keyword) this.keyword = keyword;
+    else
+      this.keyword = (findKeyword = tokens.find(
+        (t) => t.type === TokenType.KEYWORD
+      ))
+        ? findKeyword.text
+        : crypto.randomUUID();
     this.answers = this.tokens
       .filter((t) => t.type === TokenType.BLANK)
       .map((t) => t.text);
@@ -46,7 +58,9 @@ class Question {
       throw TypeError("The parameter must be a question-like object.");
     if (!obj.tokens) throw TypeError("The question must have tokens.");
     if (obj instanceof Question) return obj;
-    return new Question(obj.tokens.map((t) => Token.from(t)));
+    return new Question(
+      new TokenCollection(...obj.tokens.map((t) => Token.from(t))), obj.keyword
+    );
   }
 }
 
@@ -102,7 +116,7 @@ class TokenType {
 }
 
 class Token {
-  constructor(type, index, text) {
+  constructor(type, index, text, uuid) {
     this.type = type;
     this.index = index;
     if (text) {
@@ -133,6 +147,11 @@ class Token {
           this.text = "";
       }
     }
+    if (uuid) {
+      this.uuid = uuid;
+    } else {
+      this.uuid = crypto.randomUUID();
+    }
   }
 
   static from(obj) {
@@ -142,7 +161,33 @@ class Token {
     if (!obj.type || obj.index === undefined || !obj.text)
       throw TypeError("The token must have type, index and text.");
     if (obj instanceof Token) return obj;
-    return new Token(TokenType.valueOf(obj.type), obj.index, obj.text);
+    return new Token(
+      TokenType.valueOf(obj.type),
+      obj.index,
+      obj.text,
+      obj.uuid
+    );
+  }
+}
+
+class TokenCollection extends Array {
+  deepCopy() {
+    let JSONstring = JSON.stringify(this, function (_key, value) {
+      // symbol can't be stored by JSON, convert it to string format
+      return typeof value === "symbol"
+        ? value.toString().replace(/^Symbol\((.*)\)$/, 'Symbol("$1")')
+        : value;
+    });
+    let arrObj = JSON.parse(JSONstring);
+    let copiedArray = new TokenCollection();
+    for (let tokenObj of arrObj) {
+      copiedArray.push(Token.from(tokenObj));
+    }
+    return copiedArray;
+  }
+
+  static get [Symbol.species]() {
+    return Array;
   }
 }
 
@@ -199,7 +244,9 @@ function parse(questions_text) {
       case "config":
         if (line.indexOf("=") === -1) {
           throw new ParseError(
-            `Config lines should be in format key=value.\n>>> Error at line ${pointer}, column 1.`
+            `Config lines should be in format key=value.\n>>> Error at line ${
+              pointer + 1
+            }, column 1.`
           );
         }
         let splitted = line.split("=");
@@ -217,9 +264,9 @@ function parse(questions_text) {
             properties.version = parseInt(splitted[1]);
             if (isNaN(properties.version)) {
               throw new ParseError(
-                `Version should be a number.\n>>> Error at line ${pointer}, column ${
-                  splitted[0].length + 1
-                }`
+                `Version should be a number.\n>>> Error at line ${
+                  pointer + 1
+                }, column ${splitted[0].length + 1}`
               );
             }
             break;
@@ -227,9 +274,9 @@ function parse(questions_text) {
             format = parseInt(splitted[1]);
             if (isNaN(format)) {
               throw new ParseError(
-                `Format should be a number.\n>>> Error at line ${pointer}, column ${
-                  splitted[0].length + 1
-                }`
+                `Format should be a number.\n>>> Error at line ${
+                  pointer + 1
+                }, column ${splitted[0].length + 1}`
               );
             }
             break;
@@ -238,12 +285,12 @@ function parse(questions_text) {
             break;
           default:
             throw new ParseError(
-              `Unknown config key.\n>>> Error at line ${pointer}, column 1`
+              `Unknown config key.\n>>> Error at line ${pointer + 1}, column 1`
             );
         }
         break;
       case "questions":
-        let tokens = [];
+        let tokens = new TokenCollection();
         let findResultStart;
         let findResultEnd;
         let findResultStart2;
@@ -263,9 +310,9 @@ function parse(questions_text) {
               }
               if (line.indexOf("}", i + 1) === -1)
                 throw new ParseError(
-                  `Missing closing bracket.\n>>> Error at line ${pointer}, column ${
-                    i + 1
-                  }`
+                  `Missing closing bracket.\n>>> Error at line ${
+                    pointer + 1
+                  }, column ${i + 1}`
                 );
               tokens.push(new Token(TokenType.KEYWORD_START, i));
               break;
@@ -273,6 +320,7 @@ function parse(questions_text) {
               tokens.push(new Token(TokenType.KEYWORD_END, i));
               if (
                 (findResultStart = tokens
+                  .deepCopy()
                   .reverse()
                   .find((t) => t.type == TokenType.KEYWORD_START))
               ) {
@@ -287,17 +335,19 @@ function parse(questions_text) {
                 textIndex = i + 1;
               } else {
                 throw new ParseError(
-                  `Unmatched close bracket.\n>>> Error at line ${pointer}, column ${
-                    i + 1
-                  }`
+                  `Unmatched close bracket.\n>>> Error at line ${
+                    pointer + 1
+                  }, column ${i + 1}`
                 );
               }
               break;
             case "$":
               findResultStart = tokens
+                .deepCopy()
                 .reverse()
                 .find((t) => t.type == TokenType.BLANK_START);
               findResultEnd = tokens
+                .deepCopy()
                 .reverse()
                 .find((t) => t.type == TokenType.BLANK_END);
               if (
@@ -318,6 +368,7 @@ function parse(questions_text) {
                 );
                 if (blank.length > 1) {
                   let hintStart = tokens
+                    .deepCopy()
                     .reverse()
                     .find((t) => t.type == TokenType.HINT_START).index;
                   tokens.push(
@@ -330,9 +381,9 @@ function parse(questions_text) {
               }
               if (line.indexOf("$", i + 1) === -1) {
                 throw new ParseError(
-                  `Unmatched close bracket.\n>>> Error at line ${pointer}, column ${
-                    i + 1
-                  }`
+                  `Unmatched close bracket.\n>>> Error at line ${
+                    pointer + 1
+                  }, column ${i + 1}`
                 );
               }
               tokens.push(new Token(TokenType.BLANK_START, i));
@@ -343,13 +394,18 @@ function parse(questions_text) {
               }
               break;
             case "%":
-              findResultStart = tokens.find(
-                (t) => t.type == TokenType.BLANK_START
-              );
-              findResultEnd = tokens.find((t) => t.type == TokenType.BLANK_END);
-              findResultStart2 = tokens.find(
-                (t) => t.type == TokenType.HINT_START
-              );
+              findResultStart = tokens
+                .deepCopy()
+                .reverse()
+                .find((t) => t.type == TokenType.BLANK_START);
+              findResultEnd = tokens
+                .deepCopy()
+                .reverse()
+                .find((t) => t.type == TokenType.BLANK_END);
+              findResultStart2 = tokens
+                .deepCopy()
+                .reverse()
+                .find((t) => t.type == TokenType.HINT_START);
               if (
                 !(
                   findResultStart &&
@@ -358,26 +414,30 @@ function parse(questions_text) {
                 )
               )
                 throw new ParseError(
-                  `Hint not in a blank.\n>>> Error at line ${pointer}, column ${
-                    i + 1
-                  }`
+                  `Hint not in a blank.\n>>> Error at line ${
+                    pointer + 1
+                  }, column ${i + 1}`
                 );
               if (
                 findResultStart2 &&
                 findResultStart2.index > findResultStart.index
-              )
+              ) {
+                console.log(findResultStart, findResultStart2);
                 throw new ParseError(
-                  `There should only be one hint sign per blank.\n>>> Error at line ${pointer}, column ${
-                    i + 1
-                  }`
+                  `There should only be one hint sign per blank.\n>>> Error at line ${
+                    pointer + 1
+                  }, column ${i + 1}`
                 );
+              }
               tokens.push(new Token(TokenType.HINT_START, i));
               break;
             case "@":
               findResultStart = tokens
+                .deepCopy()
                 .reverse()
                 .find((t) => t.type == TokenType.REFERNCE_START);
               findResultEnd = tokens
+                .deepCopy()
                 .reverse()
                 .find((t) => t.type == TokenType.REFERNCE_END);
               if (
@@ -398,32 +458,34 @@ function parse(questions_text) {
               }
               if (line.indexOf("@", i + 1) === -1) {
                 throw new ParseError(
-                  `Unmatched close bracket.\n>>> Error at line ${pointer}, column ${
-                    i + 1
-                  }`
+                  `Unmatched close bracket.\n>>> Error at line ${
+                    pointer + 1
+                  }, column ${i + 1}`
                 );
               }
               tokens.push(new Token(TokenType.REFERNCE_START, i));
               append = false;
               if (text !== "") {
-                tokens.push(new Token(TokenType.PLAIN_TEXT, i, text));
+                tokens.push(new Token(TokenType.PLAIN_TEXT, textIndex, text));
                 text = "";
               }
               break;
             case "*":
               if (tokens.find((t) => t.type == TokenType.REFERNCE_SOURCE))
                 throw new ParseError(
-                  `There shouldn't be two reference sources in one question.\n>>> Error at line ${pointer}, column ${
-                    i + 1
-                  }`
+                  `There shouldn't be two reference sources in one question.\n>>> Error at line ${
+                    pointer + 1
+                  }, column ${i + 1}`
                 );
               tokens.push(new Token(TokenType.REFERNCE_SOURCE, i));
               break;
-            case "^": {
+            case "^":
               findResultStart = tokens
+                .deepCopy()
                 .reverse()
                 .find((t) => t.type == TokenType.KEYWORD_START);
               findResultEnd = tokens
+                .deepCopy()
                 .reverse()
                 .find((t) => t.type == TokenType.KEYWORD_END);
               if (
@@ -434,26 +496,38 @@ function parse(questions_text) {
                 )
               )
                 break;
-            }
             default:
               if (append) text += char;
           }
         }
         if (text !== "") {
-          tokens.push(new Token(TokenType.PLAIN_TEXT, i, text));
+          tokens.push(new Token(TokenType.PLAIN_TEXT, textIndex, text));
           text = "";
         }
         questions.push(new Question(tokens));
         break;
       default:
         throw new ParseError(
-          `A line must be in a section.\n>>> Error at line ${pointer}`
+          `A line must be in a section.\n>>> Error at line ${pointer + 1}`
         );
     }
   }
   if (!properties.name) throw new ParseError("A library must have a name.");
-  let library = new Library(properties.name, questions, properties);
+  let library = new Library(
+    properties.name,
+    properties.version,
+    questions,
+    properties
+  );
   return library;
 }
 
-export { Library, Question, TokenType, Token, ParseError, parse };
+export {
+  Library,
+  Question,
+  TokenType,
+  Token,
+  TokenCollection,
+  ParseError,
+  parse,
+};

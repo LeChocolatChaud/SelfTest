@@ -13,6 +13,11 @@ body {
   overflow-x: hidden;
 }
 
+body.dark-mode {
+  background: linear-gradient(#02101b, #02111c);
+  background-attachment: fixed;
+}
+
 .flex {
   display: flex;
 }
@@ -54,6 +59,10 @@ h1 {
   font-size: 2rem;
 }
 
+h1.dark-mode {
+  color: #fff;
+}
+
 button {
   border: none;
   height: fit-content;
@@ -76,7 +85,7 @@ input,
 select {
   border: 1px solid lightgray;
   border-radius: 1em;
-  padding: 8px;
+  padding: 8px 16px;
   font-size: 1rem;
   transition: 100ms linear;
 }
@@ -306,3 +315,12 @@ div#side-bar > div > div {
   padding: 10px;
 }
 
+input#question-count {
+  width: 3em;
+  box-sizing: content-box;
+}
+
+span.underlined {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}

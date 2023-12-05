@@ -53,7 +53,10 @@
           </select>
         </div>
       </div>
-      <div class="flex flex-column start-aligned page-wide" id="questions-container">
+      <div
+        class="flex flex-column start-aligned page-wide"
+        id="questions-container"
+      >
         <!-- questions will be here -->
         <!-- controlled by js -->
       </div>
@@ -81,15 +84,44 @@
         </button>
       </div>
     </div>
-    <button id="open-side-bar-button" class="gray-bgc translatable flex center-aligned center-justified square" title="Open the sidebar">
+    <button
+      id="open-side-bar-button"
+      class="gray-bgc translatable flex center-aligned center-justified square"
+      title="Open the sidebar"
+    >
       <object data="menu.svg" type="image/svg+xml"></object>
     </button>
     <div id="side-bar" class="flex flex-column">
-      <button id="close-side-bar-button" class="transparent-bgc flex center-aligned center-justified square"><object data="cross.svg" type="image/svg+xml"></object></button>
+      <button
+        id="close-side-bar-button"
+        class="transparent-bgc flex center-aligned center-justified square"
+      >
+        <object data="cross.svg" type="image/svg+xml"></object>
+      </button>
       <div id="library-info" class="flex flex-column">
         <h3 class="translatable" key="library-info-title">Library Info</h3>
       </div>
-      <div class="flex flex-column"></div>
+      <div class="flex flex-column">
+        <div>
+          <span class="translatable" key="difficulty">Difficulty:&nbsp;</span>
+          <select id="select-difficulty">
+            <option value="text-only" class="translatable" key="text-only" selected>
+              Text only
+            </option>
+            <option value="half-blank" class="translatable" key="half-blank">
+              Half blank
+            </option>
+            <option value="all-blank" class="traslatable" key="all-blank">
+              All blank
+            </option>
+          </select>
+        </div>
+        <div>
+          <span class="translatable" key="question-count-span">Question Count:&nbsp;</span>
+          <input id="question-count" type="number" value="10"/>
+          <div><button id="dark-mode-button" class="gray-bgc flex center-aligned center-justified square"><object data="cross.svg" type="image/svg+xml"></object></button></div>
+        </div>
+      </div>
     </div>
   </body>
 </html>

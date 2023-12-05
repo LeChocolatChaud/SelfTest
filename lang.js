@@ -3,6 +3,7 @@ const translate = function (key) {
   // if the key isn't provided by the language return
   // the key itself. The key's name should be in English
   // (en-US) and describe the string clear enough.
+  key = key.replace(/-/g, "_");
   if (!this[key]) return key;
   if (!this[key].text) return key;
   return this[key].text;
@@ -85,6 +86,21 @@ const zh_CN = Object.freeze({
   library_info_title: {
     innerText: "题库信息",
   },
+  text_only: {
+    innerText: "纯文本",
+  },
+  half_blank: {
+    innerText: "一半挖空",
+  },
+  all_blank: {
+    innerText: "全挖空",
+  },
+  difficulty: {
+    innerText: "难度：",
+  },
+  question_count_span: {
+    innerText: "题目数量：",
+  },
 });
 
 const en_US = Object.freeze({
@@ -163,6 +179,21 @@ const en_US = Object.freeze({
   },
   library_info_title: {
     innerText: "Library Info",
+  },
+  text_only: {
+    innerText: "Text only",
+  },
+  half_blank: {
+    innerText: "Half blank",
+  },
+  all_blank: {
+    innerText: "All blank",
+  },
+  difficulty: {
+    innerText: "Difficulty: ",
+  },
+  question_count_span: {
+    innerText: "Question Count: ",
   },
 });
 
