@@ -13,9 +13,13 @@ body {
   overflow-x: hidden;
 }
 
-body.dark-mode {
+body.dark {
   background: linear-gradient(#02101b, #02111c);
   background-attachment: fixed;
+}
+
+body.dark > * {
+  color: #fff;
 }
 
 .flex {
@@ -57,10 +61,6 @@ body.dark-mode {
 h1 {
   font-weight: bold;
   font-size: 2rem;
-}
-
-h1.dark-mode {
-  color: #fff;
 }
 
 button {
@@ -110,6 +110,10 @@ input.blank {
   background-color: transparent;
   padding: 0px;
   text-align: center;
+}
+
+input.blank.dark {
+  border-bottom-color: #fff;
 }
 
 input.blank:focus {
@@ -176,6 +180,10 @@ div#library-select {
   background-color: rgba(255, 255, 255, 0.7);
   padding: 1em;
   border-radius: 1em;
+}
+
+div#library-select.dark {
+  background-color: rgba(0, 0, 0, 0.7);
 }
 
 .start-aligned {
@@ -249,6 +257,10 @@ div#side-bar {
   animation: side-bar-out 0.25s ease-in-out forwards;
 }
 
+div#side-bar.dark {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
 @keyframes side-bar-in {
   from {
     right: calc(-300px - 2em);
@@ -309,10 +321,21 @@ div#side-bar > div {
   padding: 10px;
 }
 
+div#side-bar > div.dark {
+  background-color: #2d2d2d;
+}
+
+
 div#side-bar > div > div {
   width: 100%;
   height: fit-content;
   padding: 10px;
+}
+
+div.dark-mode-sensitive input.dark,
+div.dark-mode-sensitive select.dark {
+  background: #2d2d2d;
+  color: #ffffff;
 }
 
 input#question-count {
@@ -323,4 +346,10 @@ input#question-count {
 span.underlined {
   text-decoration: underline;
   text-decoration-thickness: 1px;
+  text-decoration-color: #000000;
+
+}
+
+span.underlined.dark {
+  text-decoration-color: #FFFFFF;
 }

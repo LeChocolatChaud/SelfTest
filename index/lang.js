@@ -65,8 +65,11 @@ const zh_CN = Object.freeze({
     innerText: "隐藏答案",
     title: "隐藏正确答案",
   },
-  side_bar_button: {
+  open_side_bar_button: {
     title: "打开侧边栏",
+  },
+  close_side_bar_button: {
+    title: "关闭侧边栏",
   },
   info_name: {
     text: "名称：",
@@ -159,8 +162,11 @@ const en_US = Object.freeze({
     innerText: "Hide Answers",
     title: "Hide the correct answers",
   },
-  side_bar_button: {
+  open_side_bar_button: {
     title: "Open the sidebar",
+  },
+  close_side_bar_button: {
+    title: "Close the sidebar",
   },
   info_name: {
     text: "Name: ",

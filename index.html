@@ -3,16 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="style.css" />
-    <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
-    <script type="module" src="script.js"></script>
+    <link rel="stylesheet" href="index/style.css" />
+    <script src="https://cdn.staticfile.net/jquery/3.7.1/jquery.min.js"></script>
+    <script type="module" src="index/index.js"></script>
     <title id="title">Self Test</title>
   </head>
   <body>
     <div class="flex flex-column center-aligned">
       <h1 class="translatable" key="page-title">Self Test Website</h1>
       <div
-        class="flex flex-adaptive center-aligned center-justified"
+        class="flex flex-adaptive center-aligned center-justified dark-mode-sensitive"
         id="library-select"
       >
         <div class="flex flex-row center-aligned">
@@ -91,7 +91,7 @@
     >
       <object data="menu.svg" type="image/svg+xml"></object>
     </button>
-    <div id="side-bar" class="flex flex-column">
+    <div id="side-bar" class="flex flex-column dark-mode-sensitive">
       <button
         id="close-side-bar-button"
         class="transparent-bgc flex center-aligned center-justified square"
@@ -103,9 +103,22 @@
       </div>
       <div class="flex flex-column">
         <div>
+          <button
+            id="dark-mode-button"
+            class="gray-bgc flex center-aligned center-justified square"
+          >
+            <object data="moon.svg" type="image/svg+xml"></object>
+          </button>
+        </div>
+        <div>
           <span class="translatable" key="difficulty">Difficulty:&nbsp;</span>
           <select id="select-difficulty">
-            <option value="text-only" class="translatable" key="text-only" selected>
+            <option
+              value="text-only"
+              class="translatable"
+              key="text-only"
+              selected
+            >
               Text only
             </option>
             <option value="half-blank" class="translatable" key="half-blank">
@@ -117,11 +130,80 @@
           </select>
         </div>
         <div>
-          <span class="translatable" key="question-count-span">Question Count:&nbsp;</span>
-          <input id="question-count" type="number" value="10"/>
-          <div><button id="dark-mode-button" class="gray-bgc flex center-aligned center-justified square"><object data="cross.svg" type="image/svg+xml"></object></button></div>
+          <span class="translatable" key="question-count-span"
+            >Question Count:&nbsp;</span
+          >
+          <input id="question-count" type="number" value="10" />
         </div>
       </div>
     </div>
+    <script>
+            function switchDark() {
+        const isDark = localStorage.getItem("dark_mode") === "true";
+        if (!isDark) return;
+        const querySelector =
+          "body,\
+  div#library-select,\
+  div#library-select select,\
+  div#library-select input,\
+  div#side-bar,\
+  div#side-bar > div,\
+  div#side-bar select,\
+  div#side-bar input,\
+  span.underlined,\
+  input.blank";
+        document
+          .querySelectorAll(querySelector)
+          .forEach((e) => e.classList.add("dark"));
+        const darkModeButton = document.getElementById("dark-mode-button");
+        darkModeButton.innerHTML =
+          '<object data="sun.svg" type="image/svg+xml">';
+      }
+      switchDark();
+    </script>
+    <script type="module">
+      function hideElementByIds(...id) {
+        id.forEach((i) => {
+          document.getElementById(i).style.display = "none";
+        });
+      }
+      hideElementByIds(
+        "submit-button",
+        "show-answer-button",
+        "hide-answer-button",
+        "library-info"
+      );
+
+      function translateDOM(lang) {
+        for (let i in lang) {
+          if (i === "translate") continue;
+          const elementName = i.replace(/_/g, "-");
+          let element = document.querySelector(`#${elementName}`);
+          if (!element) {
+            element = document.querySelector(`[key=${elementName}]`);
+          }
+          if (!element) {
+            continue;
+          }
+
+          for (let j in lang[i]) {
+            switch (j) {
+              case "innerHTML":
+                element.innerHTML = lang[i][j];
+                break;
+              case "innerText":
+                element.innerText = lang[i][j];
+                break;
+              default:
+                element.setAttribute(j, lang[i][j]);
+            }
+          }
+        }
+      }
+
+      import { getLang } from "./index/lang.js";
+      const chosenLang = getLang(navigator.language);
+      translateDOM(chosenLang);
+    </script>
   </body>
 </html>

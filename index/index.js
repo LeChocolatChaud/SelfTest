@@ -1,9 +1,6 @@
 import { parse, TokenType, Library } from "./parser.js";
-import { getLang } from "./lang.js";
 
 /* BEFORE USER ACTION */
-
-const lang = getLang(navigator.language);
 
 const storedLibs = localStorage.getItem("libraries");
 
@@ -100,7 +97,7 @@ $(function () {
     localStorage.setItem("question_count", $("#question-count").val());
     localStorage.setItem(
       "dark_mode",
-      $("body").hasClass("dark-mode") ? "true" : "false"
+      $("body").hasClass("dark") ? "true" : "false"
     );
   };
 
@@ -108,53 +105,47 @@ $(function () {
     $("#select-difficulty").val(localStorage.getItem("difficulty"));
   }
 
-  // translate the DOM
-  for (let i in lang) {
-    let element = $(`#${i.replace(/_/g, "-")}`);
-    if (!element.length) {
-      element = $(`[key=${i.replace(/_/g, "-")}]`);
-    }
-    if (!element.length) {
-      console.warn(
-        `Element with translate key ${i} not found. Please check your lang file.`
-      );
-      continue;
-    }
-
-    if (localStorage.getItem("dark_mode") === "true") {
-      $("body").addClass("dark-mode");
-      $("h1").addClass("dark-mode");
-    }
-
-    if (localStorage.getItem("question_count")) {
-      $("#question-count").val(localStorage.getItem("question_count"));
-    }
-
-    for (let j in lang[i]) {
-      switch (j) {
-        // text and html has their unique jq methods
-        case "innerText":
-          element.text(lang[i][j]);
-          break;
-        case "innerHTML":
-          element.html(lang[i][j]);
-          break;
-        default:
-          element.attr(j, lang[i][j]);
-      }
-    }
-  }
-
-  $("#submit-button").hide();
-  $("#show-answer-button").hide();
-  $("#hide-answer-button").hide();
-  $("#library-info").hide();
-
   for (let i = 0; i < libraries.length; i++) {
     // load the libraries into select
     const library = libraries[i];
     const option = buildLibraryOption(library.name);
     $("#saved-libraries").append(option);
+  }
+
+  if (localStorage.getItem("question_count")) {
+    $("#question-count").val(localStorage.getItem("question_count"));
+  }
+
+  // dark mode
+
+  function getDarkMode() {
+    return $("body").hasClass("dark");
+  }
+
+  function toggleDarkMode(value) {
+    $("body").toggleClass("dark", value);
+    $("div#library-select").toggleClass("dark", value);
+    $("div#library-select select").toggleClass("dark", value);
+    $("div#library-select input").toggleClass("dark", value);
+    $("div#side-bar").toggleClass("dark", value);
+    $("div#side-bar > div").toggleClass("dark", value);
+    $("div#side-bar select").toggleClass("dark", value);
+    $("div#side-bar input").toggleClass("dark", value);
+    $("span.underlined").toggleClass("dark", value);
+    $("input.blank").toggleClass("dark", value);
+    const dark = getDarkMode();
+    let switch_dark = false;
+    if (value === undefined) switch_dark = !dark;
+    else switch_dark = value;
+    if (switch_dark) {
+      $("#dark-mode-button").html(
+        '<object data="sun.svg" type="image/svg+xml">'
+      );
+    } else {
+      $("#dark-mode-button").html(
+        '<object data="moon.svg" type="image/svg+xml">'
+      );
+    }
   }
 
   function render(libraryName) {
@@ -237,15 +228,16 @@ $(function () {
             tokenElement.text(token.text);
             break;
           case TokenType.BLANK:
-            console.log(token.uuid);
             if (selectedBlanks.indexOf(token.uuid) === -1) {
               tokenElement = $(document.createElement("span"));
               tokenElement.addClass("underlined");
               tokenElement.text(token.text.join("/"));
+              if (getDarkMode()) tokenElement.addClass("dark");
               blankIndex++;
               break;
             }
             tokenElement = $(document.createElement("input"));
+            if (getDarkMode()) tokenElement.addClass("dark");
             tokenElement.attr("type", "text");
             tokenElement.attr("id", `question-${i}-blank-${blankIndex}`);
             tokenElement.attr(
@@ -460,7 +452,6 @@ $(function () {
   });
 
   $("#dark-mode-button").on("click", function () {
-    $("body").toggleClass("dark-mode");
-    $("h1").toggleClass("dark-mode");
+    toggleDarkMode();
   });
 });
